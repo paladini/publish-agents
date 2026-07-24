@@ -41,13 +41,20 @@ const DEFAULTS: Required<MediumPublisherConfig> = {
 };
 
 export function loadConfig(): Required<MediumPublisherConfig> {
+  const envDir = process.env.MEDIUM_USER_DATA_DIR;
   const file = configPath();
-  if (!fs.existsSync(file)) return { ...DEFAULTS };
+  if (!fs.existsSync(file)) {
+    return { ...DEFAULTS, ...(envDir ? { userDataDir: envDir } : {}) };
+  }
   try {
     const parsed = JSON.parse(fs.readFileSync(file, 'utf8')) as MediumPublisherConfig;
-    return { ...DEFAULTS, ...parsed };
+    return {
+      ...DEFAULTS,
+      ...parsed,
+      ...(envDir ? { userDataDir: envDir } : {}),
+    };
   } catch {
-    return { ...DEFAULTS };
+    return { ...DEFAULTS, ...(envDir ? { userDataDir: envDir } : {}) };
   }
 }
 
