@@ -1,0 +1,14 @@
+node_modules/
+dist/
+*.log
+.env
+.env.*
+!.env.example
+playwright-report/
+test-results/
+trace/
+.auth/
+storageState.json
+**/storageState.json
+.DS_Store
+Thumbs.db

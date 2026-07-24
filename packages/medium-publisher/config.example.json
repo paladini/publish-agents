@@ -1,0 +1,11 @@
+{
+  "publishByDefault": false,
+  "headless": false,
+  "slowMo": 0,
+  "username": "fernandopaladini",
+  "importTimeoutMs": 120000,
+  "browserMode": "system-profile",
+  "browserChannel": "chrome",
+  "userDataDir": "",
+  "cdpUrl": "http://127.0.0.1:9222"
+}
