@@ -11,11 +11,16 @@ Reusable **publication agents** for AI-assisted cross-posting — browser automa
 cd D:\code\publish-agents\packages\medium-publisher
 npm install -g .
 
+cd D:\code\publish-agents\packages\tabnews-publisher
+npm install -g .
+
 # 2. Login once (saves browser cookies)
 medium-publisher login
+tabnews-publisher login
 
 # 3. Register in your AI client — Claude Code:
 claude mcp add medium-publisher -- medium-publisher-mcp
+claude mcp add tabnews-publisher -- tabnews-publisher-mcp
 
 # 3b. Or add to Claude Desktop / Cursor config manually:
 #     see mcp/medium/README.md
@@ -62,8 +67,9 @@ D:\code\publish-agents\scripts\medium.ps1 login
 | Package | Status | Description |
 |---|---|---|
 | [`@paladini/medium-publisher`](./packages/medium-publisher) | v0.1 | Medium via Playwright (import URL + paste markdown) |
-| `medium-publisher-mcp` | v0.1 | MCP server wrapping the CLI above — use with Cursor, Claude Desktop, Claude Code |
-| TabNews API publisher | planned | REST API (`/api/v1/contents`) — no browser needed |
+| `medium-publisher-mcp` | v0.1 | MCP server wrapping Medium publisher CLI |
+| [`@paladini/tabnews-publisher`](./packages/tabnews-publisher) | v0.1 | TabNews via Playwright (login once + browser automation) |
+| `tabnews-publisher-mcp` | v0.1 | MCP server wrapping TabNews publisher CLI |
 | Dev.to | external | Use existing `user-devto` MCP |
 
 ## Skills (Cursor)

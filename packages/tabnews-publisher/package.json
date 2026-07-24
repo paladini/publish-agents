@@ -1,0 +1,39 @@
+{
+  "name": "@paladini/tabnews-publisher",
+  "version": "0.1.0",
+  "description": "Publish to TabNews via Playwright — persistent browser session, CLI & MCP server.",
+  "type": "module",
+  "bin": {
+    "tabnews-publisher": "./dist/cli.js",
+    "tabnews-publisher-mcp": "./dist/mcp-server.js"
+  },
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "node dist/cli.js",
+    "dev": "tsx src/cli.ts",
+    "test": "vitest run",
+    "postinstall": "playwright install chromium || true"
+  },
+  "dependencies": {
+    "playwright": "^1.52.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "tsup": "^8.5.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}
