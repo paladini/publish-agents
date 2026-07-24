@@ -166,11 +166,16 @@ export async function openLoginBrowser(options: LoginBrowserOptions = {}): Promi
           `or use: medium-publisher browser-start  then  medium-publisher login --browser cdp`,
       );
     }
-    const profileDir = path.join(appDir(), 'chrome-profile');
-    const context = await chromium.launchPersistentContext(profileDir, {
+    const dir = options.userDataDir?.trim() || userDataDir;
+    const args: string[] = [];
+    if (options.userDataDir?.trim()) {
+      // User provided explicit user-data-dir
+    }
+    const context = await chromium.launchPersistentContext(dir, {
       channel,
       headless: false,
       slowMo,
+      args,
       viewport: null,
     });
     const page = context.pages()[0] ?? (await context.newPage());
