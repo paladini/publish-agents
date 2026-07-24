@@ -33,8 +33,8 @@ jobs:
 
       - name: Publish to NPM Registry
         run: |
-          npm publish --workspace=@paladini/medium-publisher --access public
-          npm publish --workspace=@paladini/tabnews-publisher --access public
+          npm publish --workspace=@paladini/medium-publisher-mcp --access public
+          npm publish --workspace=@paladini/tabnews-publisher-mcp --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -47,7 +47,7 @@ jobs:
 
       - name: Publish to GitHub Packages
         run: |
-          npm publish --workspace=@paladini/medium-publisher
-          npm publish --workspace=@paladini/tabnews-publisher
+          npm publish --workspace=@paladini/medium-publisher-mcp
+          npm publish --workspace=@paladini/tabnews-publisher-mcp
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

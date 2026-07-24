@@ -8,10 +8,10 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build -w @paladini/medium-publisher && npm run build -w @paladini/tabnews-publisher",
-    "typecheck": "npm run typecheck -w @paladini/medium-publisher && npm run typecheck -w @paladini/tabnews-publisher",
-    "medium": "npm run start -w @paladini/medium-publisher --",
-    "tabnews": "npm run start -w @paladini/tabnews-publisher --"
+    "build": "npm run build -w @paladini/medium-publisher-mcp && npm run build -w @paladini/tabnews-publisher-mcp",
+    "typecheck": "npm run typecheck -w @paladini/medium-publisher-mcp && npm run typecheck -w @paladini/tabnews-publisher-mcp",
+    "medium": "npm run start -w @paladini/medium-publisher-mcp --",
+    "tabnews": "npm run start -w @paladini/tabnews-publisher-mcp --"
   },
   "engines": {
     "node": ">=20"

@@ -1,11 +1,11 @@
 {
-  "name": "@paladini/tabnews-publisher",
+  "name": "@paladini/tabnews-publisher-mcp",
   "version": "0.1.0",
   "description": "Publish to TabNews via Playwright — persistent browser session, CLI & MCP server.",
   "type": "module",
   "bin": {
-    "tabnews-publisher": "./dist/cli.js",
-    "tabnews-publisher-mcp": "./dist/mcp-server.js"
+    "tabnews-publisher-mcp": "./dist/mcp-server.js",
+    "tabnews-publisher": "./dist/cli.js"
   },
   "exports": {
     ".": "./dist/index.js"

@@ -1,11 +1,11 @@
 {
-  "name": "@paladini/medium-publisher",
+  "name": "@paladini/medium-publisher-mcp",
   "version": "0.1.0",
   "description": "Publish to Medium via Playwright — import cross-posts or paste markdown with persistent session.",
   "type": "module",
   "bin": {
-    "medium-publisher": "./dist/cli.js",
-    "medium-publisher-mcp": "./dist/mcp-server.js"
+    "medium-publisher-mcp": "./dist/mcp-server.js",
+    "medium-publisher": "./dist/cli.js"
   },
   "exports": {
     ".": "./dist/index.js"
