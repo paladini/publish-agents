@@ -1,4 +1,4 @@
-import type { Page } from 'playwright';
+import type { Page } from 'patchright';
 import { loadConfig } from '../config.js';
 import { assertLoggedIn, firstVisible, screenshotOnError, withBrowser } from '../browser.js';
 import type { PublishResult } from '../output.js';

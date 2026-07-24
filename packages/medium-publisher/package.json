@@ -23,7 +23,7 @@
     "postinstall": "playwright install chromium || true"
   },
   "dependencies": {
-    "playwright": "^1.52.0"
+    "patchright": "^1.52.0"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",

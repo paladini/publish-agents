@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
+import { chromium, type Browser, type BrowserContext, type Page } from 'patchright';
 import { loadConfig } from './config.js';
 import { LOGIN_PATTERNS, MEDIUM_URLS } from './medium/selectors.js';
 import { artifactsDir, statePath } from './paths.js';

@@ -8,7 +8,7 @@ import {
   type BrowserContext,
   type BrowserContextOptions,
   type Page,
-} from 'playwright';
+} from 'patchright';
 import { loadConfig, type BrowserChannel, type BrowserMode } from './config.js';
 
 export type LoginBrowserHandle = {
