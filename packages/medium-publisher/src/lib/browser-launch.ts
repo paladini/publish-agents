@@ -176,6 +176,7 @@ export async function openLoginBrowser(options: LoginBrowserOptions = {}): Promi
       headless: false,
       slowMo,
       args,
+      ignoreDefaultArgs: ['--no-sandbox'],
       viewport: null,
     });
     const page = context.pages()[0] ?? (await context.newPage());
