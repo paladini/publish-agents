@@ -10,6 +10,7 @@ import {
   type Page,
 } from 'patchright';
 import { loadConfig, type BrowserChannel, type BrowserMode } from './config.js';
+import { appDir } from './paths.js';
 
 export type LoginBrowserHandle = {
   browser: Browser | null;
@@ -165,11 +166,11 @@ export async function openLoginBrowser(options: LoginBrowserOptions = {}): Promi
           `or use: medium-publisher browser-start  then  medium-publisher login --browser cdp`,
       );
     }
-    const context = await chromium.launchPersistentContext(userDataDir, {
+    const profileDir = path.join(appDir(), 'chrome-profile');
+    const context = await chromium.launchPersistentContext(profileDir, {
       channel,
       headless: false,
       slowMo,
-      args: ['--profile-directory=Default'],
       viewport: null,
     });
     const page = context.pages()[0] ?? (await context.newPage());
