@@ -55,9 +55,10 @@ export async function interactiveLogin(options: LoginOptions = {}): Promise<stri
   const handle = await openLoginBrowser({ ...options, mode, channel });
 
   console.log(`Browser: ${describeBrowserMode(mode, channel)}`);
+  console.log('Navegando para o Medium...');
 
   // Prefer stories page — profile/CDP may already be logged in.
-  await handle.page.goto(MEDIUM_URLS.stories, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+  await handle.page.goto(MEDIUM_URLS.stories, { waitUntil: 'domcontentloaded', timeout: 60_000 }).catch(() => undefined);
 
   try {
     await assertLoggedIn(handle.page, config.username || undefined);
