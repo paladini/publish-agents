@@ -163,20 +163,15 @@ export async function openLoginBrowser(options: LoginBrowserOptions = {}): Promi
     if (isBrowserProcessRunning(channel)) {
       throw new Error(
         `Close all ${channel === 'msedge' ? 'Edge' : 'Chrome'} windows first to use your logged-in profile,\n` +
-          `or use: medium-publisher browser-start  then  medium-publisher login --browser cdp`,
+          `or run login without --browser system-profile to use isolated stealth browser.`,
       );
     }
     const dir = options.userDataDir?.trim() || userDataDir;
-    const args: string[] = [];
-    if (options.userDataDir?.trim()) {
-      // User provided explicit user-data-dir
-    }
     const context = await chromium.launchPersistentContext(dir, {
       channel,
       headless: false,
       slowMo,
-      args,
-      ignoreDefaultArgs: ['--enable-automation'],
+      ignoreDefaultArgs: ['--no-sandbox', '--enable-automation'],
       viewport: null,
     });
     const page = context.pages()[0] ?? (await context.newPage());
