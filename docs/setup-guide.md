@@ -14,9 +14,13 @@ publish-agents/
 ├── packages/
 │   └── medium-publisher/   ← CLI + MCP server (Node.js)
 └── skills/
-    ├── publish-medium/     ← Skill para Cursor
-    └── publish-crosspost/  ← Skill de crosspost
+    ├── publish-devto-to-medium/  ← Full DEV.to → Medium pipeline (Cursor)
+    ├── review-medium-import/     ← Post-import formatting review
+    ├── publish-medium/           ← Medium CLI reference
+    └── publish-crosspost/        ← Multi-channel crosspost
 ```
+
+**English docs:** [devto-to-medium.md](./devto-to-medium.md) · [medium-publisher.md](./medium-publisher.md) · [CHANGELOG.md](../CHANGELOG.md)
 
 ---
 

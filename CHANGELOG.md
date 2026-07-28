@@ -1,30 +1,33 @@
 # Changelog
 
-All notable changes to the `publish-agents` project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
----
-
-## [0.1.0] - 2026-07-24
+## [0.2.0] — 2026-07-28
 
 ### Added
-- **`@paladini/medium-publisher-mcp`**:
-  - Playwright browser automation for Medium publishing & cross-posting.
-  - Interactive login command (`medium-publisher login`) with persistent session storage.
-  - Native Stdio MCP server exposing `medium_session_check`, `medium_import`, and `medium_publish` tools.
-  - Support for `draft`, `published`, and `dry_run` modes.
 
-- **`@paladini/tabnews-publisher-mcp`**:
-  - Playwright browser automation for TabNews content publication.
-  - Interactive login command (`tabnews-publisher login`) with persistent session storage.
-  - Native Stdio MCP server exposing `tabnews_session_check` and `tabnews_publish` tools.
-  - Support for `draft`, `published`, and `dry_run` modes.
+- **`medium_publish_from_devto`** MCP tool and **`publish-devto`** CLI — one-shot DEV.to → Medium with auto-fix and publish
+- Post-import **autosave** wait before closing browser
+- **`extract`** — structured editor outline + formatting flags
+- **`fix-draft`** — apply fix actions in Medium editor
+- **`open-draft`** — headed draft inspection
+- Auto-fix: empty code blocks, adjacent code blocks, raw markdown headings
+- Security check comparing Medium content to DEV.to source
+- Import via correct URL `https://medium.com/p/import` and **contenteditable** field (not search input)
+- Cursor skills: `publish-devto-to-medium`, `review-medium-import`
+- Documentation: `docs/devto-to-medium.md`, `docs/medium-publisher.md`
 
-- **LinkedIn Integration Guides**:
-  - Documentation and configuration for `mcp-server-linkedin` (profile/data reading).
-  - Documentation and configuration for `@playwright/mcp` (post publishing).
+### Changed
 
-- **CI/CD & Repository Harness**:
-  - GitHub Actions release pipeline (`.github/workflows/release.yml`) for automated dual publishing to NPM Registry and GitHub Packages upon tag pushes (`v*`).
+- `import` returns `extract` in JSON result
+- `postinstall` uses `patchright install chromium`
+- MCP server exposes 7 tools (was 3)
+
+### Package
+
+- `@paladini/medium-publisher-mcp` **0.2.0** — distributed via this GitHub repo only
+
+## [0.1.0] — initial
+
+- Medium CLI + MCP (`medium_import`, `medium_publish`, `medium_session_check`)
+- Patchright browser automation with persistent session
+- Import URL and markdown paste flows
+- Cursor skills `publish-medium`, `publish-crosspost`

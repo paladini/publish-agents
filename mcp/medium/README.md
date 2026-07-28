@@ -1,22 +1,22 @@
-# MCP Configs — medium-publisher
+# MCP Config — medium-publisher
 
-Configurações prontas para adicionar o `medium-publisher` como servidor MCP
-em qualquer cliente compatível.
+Add `medium-publisher-mcp` to any MCP-compatible client. Install from the [publish-agents](https://github.com/paladini/publish-agents) repo (see [docs/setup-guide.md](../../docs/setup-guide.md)).
 
-**Pré-requisito:** fazer login uma vez antes de usar qualquer cliente.
+**Prerequisite:** login once:
 
 ```powershell
 medium-publisher login
 ```
 
-Isso abre o Chrome com seu perfil real. Se o Medium já estiver logado, basta
-pressionar Enter. O cookie é salvo em `%LOCALAPPDATA%\medium-publisher\storageState.json`.
+Session: `%LOCALAPPDATA%\medium-publisher\storageState.json`
 
 ---
 
-## Claude Desktop
+## Client configuration
 
-Arquivo: `%APPDATA%\Claude\claude_desktop_config.json`
+### Claude Desktop
+
+`%APPDATA%\Claude\claude_desktop_config.json`:
 
 ```json
 {
@@ -28,12 +28,11 @@ Arquivo: `%APPDATA%\Claude\claude_desktop_config.json`
 }
 ```
 
----
+### Cursor
 
-## Cursor
+Settings → MCP → Add Server → Command: `medium-publisher-mcp`
 
-Arquivo: `%APPDATA%\Cursor\User\globalStorage\cursor.mcp\mcp.json`
-(ou Settings → MCP → Add Server → Command)
+Or in MCP config JSON:
 
 ```json
 {
@@ -45,94 +44,43 @@ Arquivo: `%APPDATA%\Cursor\User\globalStorage\cursor.mcp\mcp.json`
 }
 ```
 
----
-
-## Claude Code (CLI)
+### Claude Code
 
 ```bash
 claude mcp add medium-publisher -- medium-publisher-mcp
 ```
 
-Ou edite `~/.claude.json` (Linux/Mac) / `%USERPROFILE%\.claude.json` (Windows):
-
-```json
-{
-  "mcpServers": {
-    "medium-publisher": {
-      "type": "stdio",
-      "command": "medium-publisher-mcp"
-    }
-  }
-}
-```
-
 ---
 
-## VS Code (Copilot / Agent mode)
+## Tools (v0.2.0)
 
-Arquivo: `.vscode/mcp.json` no workspace, ou nas User Settings:
-
-```json
-{
-  "servers": {
-    "medium-publisher": {
-      "type": "stdio",
-      "command": "medium-publisher-mcp"
-    }
-  }
-}
-```
-
----
-
-## Windsurf / Cline / RooCode
-
-```json
-{
-  "mcpServers": {
-    "medium-publisher": {
-      "command": "medium-publisher-mcp",
-      "args": []
-    }
-  }
-}
-```
-
----
-
-## Ferramentas disponíveis no MCP
-
-| Tool | Descrição |
+| Tool | Description |
 |---|---|
-| `medium_session_check` | Verifica se o login ainda está ativo |
-| `medium_import` | Cross-post via URL pública (dev.to, TabNews, etc.) |
-| `medium_publish` | Publica markdown direto como novo artigo |
+| **`medium_publish_from_devto`** | Publish a DEV.to article on Medium. Returns Medium URL. Args: `devto_url`, optional `publish` (default `true`) |
+| `medium_session_check` | Verify saved session |
+| `medium_import` | Import public URL. Args: `url`, `status` (`draft`\|`published`), `dry_run`, `canonical_url` |
+| `medium_publish` | New story from markdown. Args: `title`, `body`, `status`, `tags`, `dry_run` |
+| `medium_extract` | Extract draft outline + formatting flags. Args: `url` |
+| `medium_fix_draft` | Apply editor fixes. Args: `url`, `actions[]` |
+| `medium_open_draft` | Open draft in headed browser. Args: `url` |
 
-### Como publicar como rascunho (para testes)
+### Recommended usage
 
-Todos os tools aceitam o parâmetro `status`:
+> Use `medium_publish_from_devto` with `devto_url: "https://dev.to/author/my-post"`
 
-- `"status": "draft"` → salva sem publicar ✅ (padrão / seguro para testes)
-- `"status": "published"` → publica de verdade
-- `"dry_run": true` → só navega, não salva nem publica (verifica sessão)
+Success response: plain text Medium article URL.
 
-**Exemplo de uso em linguagem natural no Claude/Cursor:**
-
-> "Use medium_import para importar https://dev.to/meu-artigo como rascunho"
-
-> "Use medium_publish para criar um rascunho no Medium com o título 'Teste' e o corpo '# Olá Mundo'"
+For step-by-step control, use `medium_import` → `medium_extract` → `medium_fix_draft`.
 
 ---
 
-## Sem API Key
+## Authentication
 
-O `medium-publisher` **não usa API key**. A autenticação é feita via cookies
-do browser (Playwright storageState). Você faz login uma vez e o cookie dura
-meses (enquanto você não deslogar do Medium no browser).
+No Medium API key. Cookies from `medium-publisher login`. Do not commit `storageState.json`.
 
-O arquivo de sessão fica em:
-```
-%LOCALAPPDATA%\medium-publisher\storageState.json
-```
+---
 
-> ⚠️ Não commite esse arquivo! Ele já está no `.gitignore`.
+## Documentation
+
+- [medium-publisher reference](../../docs/medium-publisher.md)
+- [DEV.to → Medium guide](../../docs/devto-to-medium.md)

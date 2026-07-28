@@ -12,6 +12,10 @@
  *   - medium_session_check   Check whether the saved session is still valid
  *   - medium_import          Cross-post from a public URL (dev.to, TabNews, …)
  *   - medium_publish         Publish raw markdown as a new story
+ *   - medium_extract         Extract structured outline from a draft URL
+ *   - medium_fix_draft       Apply formatting fixes in the Medium editor
+ *   - medium_open_draft      Open a draft in headed browser for inspection
+ *   - medium_publish_from_devto  Publish a DEV.to article on Medium (full pipeline)
  *
  * No API key needed — authentication is handled once via `medium-publisher login`
  * which saves a Playwright storageState (cookies) to disk.
@@ -20,6 +24,10 @@
 import { checkSession } from './lib/medium/session.js';
 import { importStory } from './lib/medium/import-story.js';
 import { publishMarkdown } from './lib/medium/new-story.js';
+import { extractStory } from './lib/medium/extract-story.js';
+import { fixDraft, type FixAction } from './lib/medium/fix-draft.js';
+import { openDraftStory } from './lib/medium/open-draft.js';
+import { publishFromDevto } from './lib/medium/publish-from-devto.js';
 
 // ---------------------------------------------------------------------------
 // Minimal MCP stdio server (no extra deps — raw JSON-RPC over stdout/stdin)
@@ -56,6 +64,31 @@ function err(id: JsonRpcRequest['id'], code: number, message: string, data?: unk
 // ---------------------------------------------------------------------------
 
 const TOOLS = [
+  {
+    name: 'medium_publish_from_devto',
+    description:
+      'Publish a DEV.to article on Medium. Use when the user wants to post, publish, share, ' +
+      'republish, or mirror a dev.to blog post on Medium (dev.to to medium, cross-post). ' +
+      'Takes a public dev.to URL, imports the story, auto-fixes formatting (code blocks, headings), ' +
+      'runs basic security checks, publishes live, and returns the Medium article URL. ' +
+      'Requires one-time medium-publisher login. The dev.to article must already be published.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        devto_url: {
+          type: 'string',
+          description:
+            'Public DEV.to article URL, e.g. https://dev.to/author/my-post (must be live)',
+        },
+        publish: {
+          type: 'boolean',
+          description:
+            'Publish live on Medium. Default true. Set false to save as draft and return draft URL.',
+        },
+      },
+      required: ['devto_url'],
+    },
+  },
   {
     name: 'medium_session_check',
     description:
@@ -139,6 +172,49 @@ const TOOLS = [
       required: ['title', 'body'],
     },
   },
+  {
+    name: 'medium_extract',
+    description:
+      'Extract a structured outline from a Medium draft/story URL. Returns title, blocks, ' +
+      'and heuristic formatting flags (empty code blocks, split code blocks, raw markdown).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        url: { type: 'string', description: 'Medium draft or story editor URL' },
+      },
+      required: ['url'],
+    },
+  },
+  {
+    name: 'medium_fix_draft',
+    description:
+      'Apply limited formatting fixes to a Medium draft in the editor, wait for autosave, ' +
+      'and return updated extract. Actions: removeEmptyCodeBlocks, mergeAdjacentCodeBlocks, ' +
+      'promoteDemoteHeading, replaceBlockText.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        url: { type: 'string', description: 'Medium draft URL' },
+        actions: {
+          type: 'array',
+          description: 'Fix actions to apply in order',
+          items: { type: 'object' },
+        },
+      },
+      required: ['url', 'actions'],
+    },
+  },
+  {
+    name: 'medium_open_draft',
+    description: 'Open a Medium draft in a headed browser, wait for save, return basic info.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        url: { type: 'string', description: 'Medium draft URL' },
+      },
+      required: ['url'],
+    },
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -179,6 +255,30 @@ async function handleRequest(req: JsonRpcRequest): Promise<void> {
     const args = (params.arguments ?? {}) as Record<string, unknown>;
 
     try {
+      if (toolName === 'medium_publish_from_devto') {
+        const devtoUrl = (args.devto_url ?? args.url) as string;
+        if (!devtoUrl) {
+          err(id, -32602, 'medium_publish_from_devto requires "devto_url"');
+          return;
+        }
+        const result = await publishFromDevto({
+          devtoUrl,
+          publish: (args.publish as boolean | undefined) ?? true,
+        });
+        if (result.ok && result.medium_url) {
+          ok(id, {
+            content: [{ type: 'text', text: result.medium_url }],
+            isError: false,
+          });
+        } else {
+          ok(id, {
+            content: [{ type: 'text', text: result.error ?? 'Cross-post failed' }],
+            isError: true,
+          });
+        }
+        return;
+      }
+
       if (toolName === 'medium_session_check') {
         const result = await checkSession();
         ok(id, {
@@ -224,6 +324,49 @@ async function handleRequest(req: JsonRpcRequest): Promise<void> {
           publish,
           dryRun: (args.dry_run as boolean | undefined) ?? false,
         });
+        ok(id, {
+          content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+          isError: !result.ok,
+        });
+        return;
+      }
+
+      if (toolName === 'medium_extract') {
+        const url = args.url as string;
+        if (!url) {
+          err(id, -32602, 'medium_extract requires "url"');
+          return;
+        }
+        const result = await extractStory({ url });
+        ok(id, {
+          content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+          isError: !result.ok,
+        });
+        return;
+      }
+
+      if (toolName === 'medium_fix_draft') {
+        const url = args.url as string;
+        const actions = args.actions as FixAction[] | undefined;
+        if (!url || !actions?.length) {
+          err(id, -32602, 'medium_fix_draft requires "url" and non-empty "actions"');
+          return;
+        }
+        const result = await fixDraft({ url, actions });
+        ok(id, {
+          content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+          isError: !result.ok,
+        });
+        return;
+      }
+
+      if (toolName === 'medium_open_draft') {
+        const url = args.url as string;
+        if (!url) {
+          err(id, -32602, 'medium_open_draft requires "url"');
+          return;
+        }
+        const result = await openDraftStory({ url });
         ok(id, {
           content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
           isError: !result.ok,

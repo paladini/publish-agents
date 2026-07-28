@@ -74,19 +74,27 @@ Config: `%APPDATA%\medium-publisher\config.json` — copy from `packages/medium-
 npm run medium -- session-check
 ```
 
-3. Dry-run import (screenshot, no publish):
+3. Dry-run import (creates draft + extract, no publish):
 
 ```bash
 npm run medium -- import --url "https://dev.to/..." --dry-run --json
 ```
 
-4. Publish:
+4. Import draft:
+
+```bash
+npm run medium -- import --url "https://dev.to/..." --json
+```
+
+5. **Review formatting** — follow `skills/review-medium-import/SKILL.md` (compare DEV.to markdown, fix code blocks/headings via `fix-draft`).
+
+6. Publish only when user confirms:
 
 ```bash
 npm run medium -- import --url "https://dev.to/..." --publish --json
 ```
 
-5. Record returned `medium_url` in the announcement markdown frontmatter (`medium_url:`).
+7. Record returned `medium_url` in the announcement markdown frontmatter (`medium_url:`).
 
 ## Workflow (local markdown — fallback)
 
@@ -107,7 +115,7 @@ npm run medium -- login
 
 ## Style / content
 
-For tone and structure, consult **mcp-me** (`ask_about_me`) before writing. Medium cross-posts from dev.to usually need **no rewrite** — import preserves content.
+For tone and structure, consult **mcp-me** (`ask_about_me`) before writing. After DEV.to import, run **review-medium-import** or use **publish-devto-to-medium** for the full pipeline. See [docs/devto-to-medium.md](../docs/devto-to-medium.md).
 
 ## Do not
 

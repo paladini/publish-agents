@@ -1,94 +1,40 @@
-# @paladini/medium-publisher
+# @paladini/medium-publisher-mcp (v0.2.0)
 
-Publish to **Medium** via Playwright with a persistent browser session.
+Publish to **Medium** via **Patchright** browser automation with a persistent session.
 
-## Install
-
-From the monorepo root:
+Install from the [publish-agents](https://github.com/paladini/publish-agents) repository (not npm):
 
 ```bash
+git clone git@github.com:paladini/publish-agents.git
 cd publish-agents
-npm install
-npm run build
+npm install && npm run build
+cd packages/medium-publisher && npm link
+patchright install chromium
+medium-publisher login
 ```
 
-Install Chromium (first time):
+Full reference: [docs/medium-publisher.md](../../docs/medium-publisher.md)
+
+## Publish DEV.to → Medium
 
 ```bash
-npx playwright install chromium
+medium-publisher publish-devto --url "https://dev.to/author/post"
 ```
 
-## Quick start
+Draft only: `--draft`. JSON output: `--json`.
 
-### 1. Login once (interactive)
+## MCP
 
-```bash
-npx medium-publisher login
-```
+Run `medium-publisher-mcp`. Primary tool: **`medium_publish_from_devto`**.
 
-Sign in in the browser window, then press Enter in the terminal. Session is saved to:
+## All CLI commands
 
-- **Windows:** `%LOCALAPPDATA%\medium-publisher\storageState.json`
-- **Linux/macOS:** `~/.local/share/medium-publisher/storageState.json`
+`login` · `browser-start` · `session-check` · `import` · `publish` · `publish-devto` · `extract` · `fix-draft` · `open-draft`
 
-### 2. Check session
+## Session
 
-```bash
-npx medium-publisher session-check
-```
-
-### 3. Cross-post from dev.to (recommended)
-
-```bash
-npx medium-publisher import \
-  --url "https://dev.to/paladini/your-post" \
-  --dry-run
-
-npx medium-publisher import \
-  --url "https://dev.to/paladini/your-post" \
-  --publish \
-  --json
-```
-
-Medium's import tool fetches the public URL and sets the canonical link automatically.
-
-### 4. Publish local markdown (fallback)
-
-```bash
-npx medium-publisher publish \
-  --title "My title" \
-  --body-file ./post.md \
-  --dry-run
-```
-
-Uses clipboard paste into Medium's ProseMirror editor — less reliable than import.
-
-## Configuration
-
-Optional `~/.config/medium-publisher/config.json` (Windows: `%APPDATA%\medium-publisher\config.json`):
-
-```json
-{
-  "publishByDefault": false,
-  "headless": false,
-  "username": "fernandopaladini",
-  "importTimeoutMs": 120000
-}
-```
-
-## Exit codes
-
-| Code | Meaning |
-|---|---|
-| 0 | Success |
-| 1 | Failure |
-| 2 | Usage error |
-| 3 | Session missing/expired |
-| 4 | Timeout |
-| 5 | Dry-run completed |
+Saved to `%LOCALAPPDATA%\medium-publisher\storageState.json` (Windows).
 
 ## Troubleshooting
 
-See [../../skills/publish-medium/TROUBLESHOOTING.md](../../skills/publish-medium/TROUBLESHOOTING.md).
-
-Screenshots on failure: `%LOCALAPPDATA%\medium-publisher\artifacts\` (or `~/.local/share/medium-publisher/artifacts/`).
+[skills/publish-medium/TROUBLESHOOTING.md](../../skills/publish-medium/TROUBLESHOOTING.md)

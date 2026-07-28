@@ -18,6 +18,8 @@ export type MediumPublisherConfig = {
   username?: string;
   /** Import preview timeout ms */
   importTimeoutMs?: number;
+  /** Wait for draft autosave after import/edit */
+  saveTimeoutMs?: number;
   /** Login browser mode — use system-profile or cdp to reuse your logged-in browser */
   browserMode?: BrowserMode;
   /** chrome or msedge when using system-profile / browser-start */
@@ -34,6 +36,7 @@ const DEFAULTS: Required<MediumPublisherConfig> = {
   slowMo: 0,
   username: '',
   importTimeoutMs: 120_000,
+  saveTimeoutMs: 30_000,
   browserMode: 'bundled',
   browserChannel: 'chrome',
   userDataDir: '',

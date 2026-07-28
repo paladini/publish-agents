@@ -3,7 +3,7 @@
 export const MEDIUM_URLS = {
   home: 'https://medium.com/',
   stories: 'https://medium.com/me/stories',
-  import: 'https://medium.com/me/stories/import',
+  import: 'https://medium.com/p/import',
   newStory: 'https://medium.com/new-story',
   signIn: 'https://medium.com/m/signin',
 } as const;

@@ -16,10 +16,10 @@ export type PublishMarkdownOptions = {
 
 async function pasteMarkdown(page: Page, body: string): Promise<void> {
   const editor =
-    (await firstVisible(page, SELECTORS.editor)) ?? page.locator('[contenteditable="true"]').nth(1);
-  if (!editor) throw new Error('Could not find Medium story editor');
+    (await firstVisible(page, SELECTORS.editor)) ?? page.locator('[contenteditable="true"]').last();
+  if (!editor || (await editor.count()) === 0) throw new Error('Could not find Medium story editor');
 
-  await editor.click();
+  await editor.click({ force: true }).catch(() => editor.focus().catch(() => undefined));
   await page.evaluate(async (text) => {
     await navigator.clipboard.writeText(text);
   }, body);

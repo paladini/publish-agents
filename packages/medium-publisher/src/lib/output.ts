@@ -1,3 +1,5 @@
+import type { StoryExtract } from './medium/extract-story.js';
+
 export type PublishStatus = 'draft' | 'published' | 'dry-run';
 
 export type PublishResult = {
@@ -9,6 +11,7 @@ export type PublishResult = {
   screenshot?: string;
   message?: string;
   error?: string;
+  extract?: StoryExtract;
 };
 
 export function printResult(result: PublishResult, asJson: boolean): number {
@@ -20,6 +23,9 @@ export function printResult(result: PublishResult, asJson: boolean): number {
     if (result.canonical_url) console.log(`Canonical: ${result.canonical_url}`);
     if (result.screenshot) console.log(`Screenshot: ${result.screenshot}`);
     if (result.message) console.log(result.message);
+    if (result.extract?.flags.length) {
+      console.log(`Extract flags: ${result.extract.flags.length}`);
+    }
   } else {
     console.error(`FAIL [${result.mode}] ${result.error ?? 'unknown error'}`);
     if (result.screenshot) console.error(`Screenshot: ${result.screenshot}`);
@@ -43,4 +49,15 @@ export class TimeoutError extends Error {
     super(message);
     this.name = 'TimeoutError';
   }
+}
+
+export function printJson(value: unknown): void {
+  console.log(JSON.stringify(value, null, 2));
+}
+
+export function printJsonExit(value: { ok: boolean }, asJson: boolean): number {
+  if (asJson) printJson(value);
+  else if (value.ok) console.log('OK');
+  else console.error('FAIL');
+  return value.ok ? 0 : 1;
 }

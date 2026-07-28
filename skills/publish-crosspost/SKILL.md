@@ -38,13 +38,18 @@ Store `published_url` and `article_id` in frontmatter.
 
 ### 3. Medium cross-post
 
+Use skill **`publish-devto-to-medium`** for the full corrected pipeline, or manually:
+
 From **publish-agents** repo:
 
 ```bash
 npm run medium -- session-check
-npm run medium -- import --url "<dev.to URL>" --dry-run --json
-npm run medium -- import --url "<dev.to URL>" --publish --json
+npm run medium -- import --url "<dev.to URL>" --json
+# review-medium-import / fix-draft as needed
+npm run medium -- import --url "<dev.to URL>" --publish --json  # explicit opt-in only
 ```
+
+See [docs/devto-to-medium.md](../docs/devto-to-medium.md).
 
 Add `medium_url` to frontmatter.
 
@@ -74,10 +79,12 @@ Always **dev.to → Medium import** so Medium gets a stable public URL and canon
 
 ## Skills used together
 
-1. **publish-crosspost** (this file) — pipeline
-2. **publish-medium** — Medium CLI details
-3. **mcp-me** — voice
-4. **user-devto** — dev.to API
+1. **publish-crosspost** (this file) — multi-channel pipeline
+2. **publish-devto-to-medium** — full DEV.to → Medium with review and fixes
+3. **review-medium-import** — formatting review only
+4. **publish-medium** — Medium CLI details
+5. **mcp-me** — voice
+6. **user-devto** — dev.to API
 
 ## Failures
 

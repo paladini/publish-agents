@@ -1,11 +1,11 @@
 {
   "name": "@paladini/medium-publisher-mcp",
-  "version": "0.1.0",
-  "description": "Publish to Medium via Playwright — import cross-posts or paste markdown with persistent session.",
+  "version": "0.2.0",
+  "description": "Publish to Medium via browser automation — DEV.to import, auto-fix formatting, MCP tools, persistent session.",
   "type": "module",
   "bin": {
-    "medium-publisher-mcp": "./dist/mcp-server.js",
-    "medium-publisher": "./dist/cli.js"
+    "medium-publisher-mcp": "dist/mcp-server.js",
+    "medium-publisher": "dist/cli.js"
   },
   "exports": {
     ".": "./dist/index.js"
@@ -20,7 +20,7 @@
     "start": "node dist/cli.js",
     "dev": "tsx src/cli.ts",
     "test": "vitest run",
-    "postinstall": "playwright install chromium || true"
+    "postinstall": "patchright install chromium || true"
   },
   "dependencies": {
     "patchright": "^1.52.0"

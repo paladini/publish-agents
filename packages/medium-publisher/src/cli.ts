@@ -3,7 +3,11 @@ import fs from 'node:fs';
 import { checkSession, interactiveLogin, parseLoginCliArgs, startDebugBrowser } from './lib/medium/session.js';
 import { importStory } from './lib/medium/import-story.js';
 import { publishMarkdown } from './lib/medium/new-story.js';
-import { printResult, SessionError } from './lib/output.js';
+import { extractStory } from './lib/medium/extract-story.js';
+import { fixDraft, type FixAction } from './lib/medium/fix-draft.js';
+import { openDraftStory } from './lib/medium/open-draft.js';
+import { publishFromDevto } from './lib/medium/publish-from-devto.js';
+import { printResult, printJsonExit, SessionError } from './lib/output.js';
 
 function usage(): never {
   console.log(`medium-publisher — publish to Medium via Playwright
@@ -14,31 +18,17 @@ Usage:
   medium-publisher session-check [--json]
   medium-publisher import --url URL [--canonical URL] [--publish] [--dry-run] [--json]
   medium-publisher publish --title T --body-file PATH [--tags a,b] [--canonical URL] [--publish] [--dry-run] [--json]
+  medium-publisher extract --url URL [--json]
+  medium-publisher open-draft --url URL [--json]
+  medium-publisher fix-draft --url URL --actions-file PATH [--json]
+  medium-publisher publish-devto --url DEVTO_URL [--draft] [--json]
 
 Login options (reuse your logged-in browser):
   --browser bundled|chrome|edge|system-profile|cdp
-      bundled          Playwright Chromium (isolated, default fallback)
-      chrome / edge    Installed browser, isolated session
-      system-profile   Your Default Chrome/Edge profile (close browser first)
-      cdp              Attach to Chrome/Edge started with browser-start
-  --channel chrome|msedge     Profile browser (default: chrome)
-  --user-data-dir PATH        Override profile directory
-  --cdp-url URL               CDP endpoint (default: http://127.0.0.1:9222)
-  --email / --password        Optional; usually unnecessary with system-profile
-
-Recommended (already logged into Medium in Chrome):
-  1. Close Chrome completely
-  2. medium-publisher login --browser system-profile
-
-Or without closing Chrome:
-  1. medium-publisher browser-start
-  2. medium-publisher login --browser cdp
-
-Environment:
-  MEDIUM_STATE_PATH          Override session file path
-  MEDIUM_PUBLISHER_HOME      App data directory
-  MEDIUM_CDP_URL             Default CDP URL
-  MEDIUM_EMAIL / MEDIUM_PASSWORD  Optional automated login fallback
+  --channel chrome|msedge
+  --user-data-dir PATH
+  --cdp-url URL
+  --email / --password
 
 Exit codes: 0 ok · 1 failure · 2 usage · 3 session · 4 timeout · 5 dry-run ok
 `);
@@ -52,6 +42,12 @@ function flag(args: string[], name: string): boolean {
 function opt(args: string[], name: string): string | undefined {
   const i = args.indexOf(name);
   return i >= 0 ? args[i + 1] : undefined;
+}
+
+function parseActionsFile(path: string): FixAction[] {
+  const raw = JSON.parse(fs.readFileSync(path, 'utf8')) as unknown;
+  if (!Array.isArray(raw)) throw new Error('--actions-file must contain a JSON array');
+  return raw as FixAction[];
 }
 
 async function main(): Promise<void> {
@@ -112,6 +108,42 @@ async function main(): Promise<void> {
         dryRun: flag(args, '--dry-run'),
       });
       process.exit(printResult(result, flag(args, '--json')));
+    }
+
+    if (cmd === 'extract') {
+      const url = opt(args, '--url');
+      if (!url) usage();
+      const result = await extractStory({ url });
+      process.exit(printJsonExit(result, flag(args, '--json')));
+    }
+
+    if (cmd === 'open-draft') {
+      const url = opt(args, '--url');
+      if (!url) usage();
+      const result = await openDraftStory({ url });
+      process.exit(printJsonExit(result, flag(args, '--json')));
+    }
+
+    if (cmd === 'fix-draft') {
+      const url = opt(args, '--url');
+      const actionsFile = opt(args, '--actions-file');
+      if (!url || !actionsFile) usage();
+      const result = await fixDraft({ url, actions: parseActionsFile(actionsFile) });
+      process.exit(printJsonExit(result, flag(args, '--json')));
+    }
+
+    if (cmd === 'publish-devto') {
+      const url = opt(args, '--url');
+      if (!url) usage();
+      const result = await publishFromDevto({ devtoUrl: url, publish: !flag(args, '--draft') });
+      if (flag(args, '--json')) {
+        console.log(JSON.stringify(result.ok ? { medium_url: result.medium_url } : { error: result.error }, null, 2));
+      } else if (result.ok && result.medium_url) {
+        console.log(result.medium_url);
+      } else {
+        console.error(result.error ?? 'Cross-post failed');
+      }
+      process.exit(result.ok ? 0 : 1);
     }
 
     usage();

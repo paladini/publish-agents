@@ -1,124 +1,75 @@
 # publish-agents
 
-Reusable **publication agents** for AI-assisted cross-posting — browser automation, CLI tools, MCP servers, and Cursor skills you can use from any project.
+Reusable **publication agents** for AI-assisted cross-posting — browser automation, CLI tools, MCP servers, and Cursor skills.
 
-**Not tied to any single product repo.** Install globally and publish from any AI client (Cursor, Claude Desktop, Claude Code, Windsurf, etc.).
+**Distributed via this GitHub repository only** (not npm). Current release: **v0.2.0**.
 
-## Global MCP setup (Medium)
-
-```powershell
-# 1. Install globally
-cd D:\code\publish-agents\packages\medium-publisher
-npm install -g .
-
-cd D:\code\publish-agents\packages\tabnews-publisher
-npm install -g .
-
-# 2. Login once (saves browser cookies)
-medium-publisher login
-tabnews-publisher login
-
-# 3. Register in your AI client — Claude Code:
-claude mcp add medium-publisher -- medium-publisher-mcp
-claude mcp add tabnews-publisher -- tabnews-publisher-mcp
-
-# 3b. Or add to Claude Desktop / Cursor config manually:
-#     see mcp/medium/README.md
-```
-
-See [`mcp/medium/README.md`](./mcp/medium/README.md) for all client configs.
-
-## Quick start (Medium login)
-
-Uses your **real Chrome/Edge profile** by default (same cookies/extensions as daily browsing).
-
-### Option A — Chrome profile (recommended if Medium already open in Chrome)
-
-1. **Close Chrome completely** (all windows).
-2. Run:
+## Quick start
 
 ```powershell
-cd D:\code\publish-agents
+git clone git@github.com:paladini/publish-agents.git
+cd publish-agents
+npm install
+npm run build
+
+cd packages/medium-publisher
+npm link
+patchright install chromium
 medium-publisher login
 ```
 
-Default `--browser system-profile` opens Chrome with your Default profile. If Medium is already logged in, press Enter immediately.
+Register MCP: `medium-publisher-mcp` — see [mcp/medium/README.md](./mcp/medium/README.md).
 
-### Option B — Chrome already running
+## Publish DEV.to → Medium (one command)
 
-1. `medium-publisher browser-start` (opens Chrome with remote debugging + your profile — close normal Chrome first).
-2. `medium-publisher login --browser cdp`
-
-### Option C — isolated Playwright Chromium
+**CLI:**
 
 ```powershell
-medium-publisher login --browser bundled
+medium-publisher publish-devto --url "https://dev.to/author/post"
 ```
 
-### From any folder
+**MCP:** `medium_publish_from_devto` with `devto_url` → returns live Medium URL.
 
-```powershell
-medium-publisher login
-# or
-D:\code\publish-agents\scripts\medium.ps1 login
-```
+See [docs/devto-to-medium.md](./docs/devto-to-medium.md) and [docs/medium-publisher.md](./docs/medium-publisher.md).
 
+## Packages
 
-| Package | Status | Description |
+| Package | Version | Description |
 |---|---|---|
-| [`@paladini/medium-publisher`](./packages/medium-publisher) | v0.1 | Medium via Playwright (import URL + paste markdown) |
-| `medium-publisher-mcp` | v0.1 | MCP server wrapping Medium publisher CLI |
-| [`@paladini/tabnews-publisher`](./packages/tabnews-publisher) | v0.1 | TabNews via Playwright (login once + browser automation) |
-| `tabnews-publisher-mcp` | v0.1 | MCP server wrapping TabNews publisher CLI |
-| Dev.to | external | Use existing `user-devto` MCP |
+| [medium-publisher](./packages/medium-publisher) | **0.2.0** | Medium via Patchright — import, auto-fix, MCP |
+| [tabnews-publisher](./packages/tabnews-publisher) | 0.1.0 | TabNews via Patchright |
+| Dev.to | external | `user-devto` MCP |
 
-## Skills (Cursor)
+## Cursor skills
 
 | Skill | Purpose |
 |---|---|
-| [`publish-medium`](./skills/publish-medium) | Publish / cross-post to Medium |
-| [`publish-crosspost`](./skills/publish-crosspost) | Orchestrate dev.to → Medium (and future channels) |
-
-### Install skills globally
+| [publish-devto-to-medium](./skills/publish-devto-to-medium) | Full DEV.to → Medium pipeline with review |
+| [review-medium-import](./skills/review-medium-import) | Post-import formatting review |
+| [publish-medium](./skills/publish-medium) | Medium CLI reference |
+| [publish-crosspost](./skills/publish-crosspost) | Multi-channel orchestration |
 
 ```powershell
-# Windows — run from this repo root
 .\scripts\install-skills.ps1
 ```
 
-```bash
-# Linux/macOS
-./scripts/install-skills.sh
-```
+## Documentation
 
-This copies skills into `~/.cursor/skills/` (or `%USERPROFILE%\.cursor\skills\` on Windows).
-
-## Typical release workflow
-
-1. Write announcement markdown locally (any repo).
-2. Publish to dev.to via `user-devto` MCP.
-3. Cross-post to Medium:
-
-```bash
-cd publish-agents
-npm run medium -- session-check
-npm run medium -- import --url "https://dev.to/..." --dry-run
-npm run medium -- import --url "https://dev.to/..." --publish --json
-```
-
-4. (Future) TabNews via API CLI.
+| Doc | Contents |
+|---|---|
+| [docs/medium-publisher.md](./docs/medium-publisher.md) | CLI, MCP, config, source layout |
+| [docs/devto-to-medium.md](./docs/devto-to-medium.md) | DEV.to cross-post details |
+| [docs/setup-guide.md](./docs/setup-guide.md) | Initial setup |
+| [docs/architecture.md](./docs/architecture.md) | System design |
+| [CHANGELOG.md](./CHANGELOG.md) | Release history |
 
 ## Development
 
 ```bash
 npm install
 npm run build
-npm test
+npm test -w @paladini/medium-publisher-mcp
 ```
-
-## Architecture
-
-See [docs/architecture.md](./docs/architecture.md).
 
 ## License
 
