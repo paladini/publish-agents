@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.2.1] — 2026-07-28
+
+### Added
+
+- **Story metadata module** (`story-metadata.ts`) — title, SEO subtitle (~140 chars), Medium topics (up to 5)
+- DEV.to API fields: `description`, `tag_list`, `cover_image`, `social_image`
+- Publish dialog automation: preview title/subtitle, topic autocomplete via `#tagMultiSelectMenu`
+- Hero image wait after import (OG fetch)
+- CLI `--json` returns `details` (tags, subtitle, `title_set`, `hero_image`)
+- Unit tests for `truncateSeoDescription` and `parseDevtoTags`
+
+### Fixed
+
+- **Import navigation** — do not click "See your story" when already on `/p/.../edit` (was opening import preview and breaking publish)
+- **Tags** — wait for autocomplete menu, pick exact topic match, dismiss dropdown between tags
+- **Publish URL** — normalize to clean `https://medium.com/p/{id}/` after publish
+- Overlay dismiss before clicking Publish
+
+### Changed
+
+- MCP `medium_publish_from_devto` returns JSON with `medium_url` + `details` (was plain URL text)
+- MCP `medium_publish` accepts optional `subtitle`; server version read from `package.json`
+- MCP server version synced (was stale `0.1.0`)
+
+### Package
+
+- `@paladini/medium-publisher-mcp` **0.2.1** — GitHub release only
+
 ## [0.2.0] — 2026-07-28
 
 ### Added

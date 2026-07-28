@@ -137,7 +137,15 @@ async function main(): Promise<void> {
       if (!url) usage();
       const result = await publishFromDevto({ devtoUrl: url, publish: !flag(args, '--draft') });
       if (flag(args, '--json')) {
-        console.log(JSON.stringify(result.ok ? { medium_url: result.medium_url } : { error: result.error }, null, 2));
+        console.log(
+          JSON.stringify(
+            result.ok
+              ? { medium_url: result.medium_url, details: result.details }
+              : { error: result.error },
+            null,
+            2,
+          ),
+        );
       } else if (result.ok && result.medium_url) {
         console.log(result.medium_url);
       } else {

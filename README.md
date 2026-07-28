@@ -2,7 +2,7 @@
 
 Reusable **publication agents** for AI-assisted cross-posting — browser automation, CLI tools, MCP servers, and Cursor skills.
 
-**Distributed via this GitHub repository only** (not npm). Current release: **v0.2.0**.
+**Distributed via this GitHub repository only** (not npm). Current release: **v0.2.1**.
 
 ## Quick start
 
@@ -28,7 +28,7 @@ Register MCP: `medium-publisher-mcp` — see [mcp/medium/README.md](./mcp/medium
 medium-publisher publish-devto --url "https://dev.to/author/post"
 ```
 
-**MCP:** `medium_publish_from_devto` with `devto_url` → returns live Medium URL.
+**MCP:** `medium_publish_from_devto` with `devto_url` → returns JSON with Medium URL + metadata details.
 
 See [docs/devto-to-medium.md](./docs/devto-to-medium.md) and [docs/medium-publisher.md](./docs/medium-publisher.md).
 
@@ -36,7 +36,7 @@ See [docs/devto-to-medium.md](./docs/devto-to-medium.md) and [docs/medium-publis
 
 | Package | Version | Description |
 |---|---|---|
-| [medium-publisher](./packages/medium-publisher) | **0.2.0** | Medium via Patchright — import, auto-fix, MCP |
+| [medium-publisher](./packages/medium-publisher) | **0.2.1** | Medium via Patchright — import, metadata, auto-fix, MCP |
 | [tabnews-publisher](./packages/tabnews-publisher) | 0.1.0 | TabNews via Patchright |
 | Dev.to | external | `user-devto` MCP |
 

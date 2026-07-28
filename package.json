@@ -1,7 +1,7 @@
 {
   "name": "publish-agents",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Reusable publication agents — browser automation and skills for Medium, cross-posting, and more.",
   "type": "module",
   "workspaces": [

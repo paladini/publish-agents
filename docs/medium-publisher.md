@@ -1,4 +1,4 @@
-# medium-publisher reference (v0.2.0)
+# medium-publisher reference (v0.2.1)
 
 Complete reference for `@paladini/medium-publisher-mcp` as implemented in this repository. Install from source only (not published to npm).
 
@@ -75,10 +75,10 @@ Transport: newline-delimited JSON-RPC on stdio.
 
 | Tool | Description |
 |---|---|
-| **`medium_publish_from_devto`** | Publish DEV.to on Medium. Args: `devto_url`, optional `publish` (default true). Returns Medium URL text on success |
+| **`medium_publish_from_devto`** | Publish DEV.to on Medium. Args: `devto_url`, optional `publish` (default true). Returns JSON: `medium_url` + `details` (tags, subtitle, hero_image) |
 | `medium_session_check` | Session validity |
 | `medium_import` | Import URL. Args: `url`, `status` (`draft`\|`published`), `dry_run`, `canonical_url` |
-| `medium_publish` | Paste markdown. Args: `title`, `body`, `status`, `tags`, `dry_run` |
+| `medium_publish` | Paste markdown. Args: `title`, `body`, `status`, `tags`, `subtitle`, `dry_run` |
 | `medium_extract` | Args: `url` → outline + flags |
 | `medium_fix_draft` | Args: `url`, `actions[]` |
 | `medium_open_draft` | Args: `url` → headed inspection |
@@ -87,14 +87,15 @@ Transport: newline-delimited JSON-RPC on stdio.
 
 Single browser session:
 
-1. Fetch DEV.to markdown via public API (`/api/articles/{user}/{slug}`)
+1. Fetch DEV.to article via public API (`title`, `description`, `tag_list`, `cover_image`, `social_image`, `body_markdown`)
 2. Navigate to `https://medium.com/p/import`
 3. Fill **contenteditable** import field (not search input)
-4. Open draft editor, wait for autosave
-5. Auto-fix loop (max 3): empty code blocks, merge adjacent blocks, raw markdown headings
-6. Security check (secrets / suspicious links vs source)
-7. Publish (unless `publish: false`)
-8. Return normalized Medium URL
+4. Wait for editor (`/p/.../edit`) or click **link** "See your story" from import preview — **never** click the editor's "See your story" button (opens import preview)
+5. Set story title if Medium left default empty title; wait for hero image
+6. Auto-fix loop (max 3): empty code blocks, merge adjacent blocks, raw markdown headings
+7. Security check (secrets / suspicious links vs source)
+8. Publish dialog: preview title, SEO subtitle (~140 chars), up to 5 topics
+9. Return normalized Medium URL + metadata details
 
 ## Import flow (manual)
 
@@ -161,6 +162,7 @@ packages/medium-publisher/src/
     ├── import-flow.ts      # Import page automation
     ├── import-story.ts     # import CLI
     ├── publish-from-devto.ts
+    ├── story-metadata.ts   # title, subtitle, tags, hero wait
     ├── extract-story.ts
     ├── fix-draft.ts
     ├── auto-fix.ts

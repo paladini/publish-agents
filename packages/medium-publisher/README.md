@@ -1,4 +1,4 @@
-# @paladini/medium-publisher-mcp (v0.2.0)
+# @paladini/medium-publisher-mcp (v0.2.1)
 
 Publish to **Medium** via **Patchright** browser automation with a persistent session.
 

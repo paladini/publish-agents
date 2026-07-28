@@ -52,14 +52,14 @@ claude mcp add medium-publisher -- medium-publisher-mcp
 
 ---
 
-## Tools (v0.2.0)
+## Tools (v0.2.1)
 
 | Tool | Description |
 |---|---|
-| **`medium_publish_from_devto`** | Publish a DEV.to article on Medium. Returns Medium URL. Args: `devto_url`, optional `publish` (default `true`) |
+| **`medium_publish_from_devto`** | Publish DEV.to on Medium. Returns JSON `{ medium_url, details }`. Args: `devto_url`, optional `publish` (default `true`) |
 | `medium_session_check` | Verify saved session |
 | `medium_import` | Import public URL. Args: `url`, `status` (`draft`\|`published`), `dry_run`, `canonical_url` |
-| `medium_publish` | New story from markdown. Args: `title`, `body`, `status`, `tags`, `dry_run` |
+| `medium_publish` | New story from markdown. Args: `title`, `body`, `status`, `tags`, `subtitle`, `dry_run` |
 | `medium_extract` | Extract draft outline + formatting flags. Args: `url` |
 | `medium_fix_draft` | Apply editor fixes. Args: `url`, `actions[]` |
 | `medium_open_draft` | Open draft in headed browser. Args: `url` |
@@ -68,7 +68,7 @@ claude mcp add medium-publisher -- medium-publisher-mcp
 
 > Use `medium_publish_from_devto` with `devto_url: "https://dev.to/author/my-post"`
 
-Success response: plain text Medium article URL.
+Success response: JSON with `medium_url` and `details` (tags, subtitle, `title_set`, `hero_image`).
 
 For step-by-step control, use `medium_import` → `medium_extract` → `medium_fix_draft`.
 

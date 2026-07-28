@@ -1,14 +1,18 @@
 import type { Page } from 'patchright';
 import { loadConfig } from '../config.js';
-import { assertLoggedIn, firstVisible, screenshotOnError, withBrowser } from '../browser.js';
+import { assertLoggedIn, firstVisible, withBrowser } from '../browser.js';
 import type { PublishResult } from '../output.js';
 import { artifactsDir } from '../paths.js';
+import { clickPublish } from './import-flow.js';
+import { fillStoryTitle, truncateSeoDescription } from './story-metadata.js';
 import { MEDIUM_URLS, SELECTORS } from './selectors.js';
 
 export type PublishMarkdownOptions = {
   title: string;
   body: string;
   tags?: string[];
+  /** ~140 char SEO subtitle for search previews */
+  subtitle?: string;
   canonical?: string;
   publish?: boolean;
   dryRun?: boolean;
@@ -27,27 +31,6 @@ async function pasteMarkdown(page: Page, body: string): Promise<void> {
   await page.waitForTimeout(1500);
 }
 
-async function fillTitle(page: Page, title: string): Promise<void> {
-  const titleEl =
-    (await firstVisible(page, SELECTORS.titleInput)) ??
-    page.locator('h1[contenteditable="true"]').first();
-  if ((await titleEl.count()) === 0) {
-    await page.keyboard.type(title);
-    return;
-  }
-  await titleEl.click();
-  await page.keyboard.press(`${process.platform === 'darwin' ? 'Meta' : 'Control'}+KeyA`);
-  await page.keyboard.type(title);
-}
-
-async function clickPublish(page: Page): Promise<void> {
-  const publish = page.getByRole('button', { name: /^publish$/i }).first();
-  await publish.click();
-  await page.waitForTimeout(800);
-  const confirm = page.getByRole('button', { name: /publish now|publish and send/i }).first();
-  if ((await confirm.count()) > 0) await confirm.click();
-}
-
 export async function publishMarkdown(options: PublishMarkdownOptions): Promise<PublishResult> {
   const config = loadConfig();
   const shouldPublish = options.publish ?? config.publishByDefault;
@@ -60,7 +43,7 @@ export async function publishMarkdown(options: PublishMarkdownOptions): Promise<
         await page.goto(MEDIUM_URLS.newStory, { waitUntil: 'domcontentloaded', timeout: 60_000 });
 
         await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-        await fillTitle(page, options.title);
+        await fillStoryTitle(page, options.title);
         await pasteMarkdown(page, options.body);
 
         const shot = `${artifactsDir()}/publish-preview-${Date.now()}.png`;
@@ -78,7 +61,13 @@ export async function publishMarkdown(options: PublishMarkdownOptions): Promise<
           };
         }
 
-        if (shouldPublish) await clickPublish(page);
+        if (shouldPublish) {
+          await clickPublish(page, {
+            previewTitle: options.title,
+            subtitle: options.subtitle ? truncateSeoDescription(options.subtitle) : undefined,
+            tags: options.tags,
+          });
+        }
 
         return {
           ok: true,

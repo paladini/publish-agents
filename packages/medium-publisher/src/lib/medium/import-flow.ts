@@ -2,6 +2,7 @@ import type { Locator, Page } from 'patchright';
 import { firstVisible } from '../browser.js';
 import { TimeoutError } from '../output.js';
 import { isStoryEditorUrl, waitForStoryEditor } from './editor-utils.js';
+import { fillPublishDialog, type PublishMetadata } from './story-metadata.js';
 import { MEDIUM_URLS, SELECTORS } from './selectors.js';
 
 async function waitForImportPage(page: Page): Promise<void> {
@@ -51,6 +52,8 @@ export async function fillImportUrl(page: Page, url: string): Promise<void> {
 export async function waitForImportPreview(page: Page, timeoutMs: number): Promise<void> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
+    if (isStoryEditorUrl(page.url())) return;
+
     const seeStory = page.getByRole('link', { name: /see your story/i });
     const editor = await firstVisible(page, SELECTORS.editor);
     if ((await seeStory.count()) > 0 || editor) return;
@@ -63,24 +66,23 @@ export async function waitForImportPreview(page: Page, timeoutMs: number): Promi
 }
 
 export async function openImportedDraft(page: Page): Promise<void> {
-  const seeStory = page.getByRole('link', { name: /see your story/i });
-  if ((await seeStory.count()) > 0) {
-    await seeStory.first().click();
-    await page.waitForLoadState('domcontentloaded');
-    await waitForStoryEditor(page);
-    return;
-  }
-  const btn = page.getByRole('button', { name: /see your story/i });
-  if ((await btn.count()) > 0) {
-    await btn.first().click();
-    await page.waitForLoadState('domcontentloaded');
+  if (isStoryEditorUrl(page.url())) {
     await waitForStoryEditor(page);
     return;
   }
 
-  if (isStoryEditorUrl(page.url())) {
-    await waitForStoryEditor(page);
+  // After import, Medium shows a preview with "See your story" — open the editor from there.
+  const seeStoryLink = page.getByRole('link', { name: /see your story/i });
+  if ((await seeStoryLink.count()) > 0) {
+    await seeStoryLink.first().click();
+    await page.waitForLoadState('domcontentloaded');
+    if (isStoryEditorUrl(page.url())) {
+      await waitForStoryEditor(page);
+      return;
+    }
   }
+
+  await waitForStoryEditor(page);
 }
 
 export async function setCanonicalIfNeeded(page: Page, canonical: string | undefined): Promise<void> {
@@ -90,18 +92,37 @@ export async function setCanonicalIfNeeded(page: Page, canonical: string | undef
   void canonical;
 }
 
-export async function clickPublish(page: Page): Promise<void> {
+async function dismissOverlays(page: Page): Promise<void> {
+  for (let i = 0; i < 3; i++) {
+    await page.keyboard.press('Escape').catch(() => undefined);
+    await page.waitForTimeout(150);
+  }
+}
+
+export async function clickPublish(page: Page, metadata?: PublishMetadata): Promise<void> {
+  await dismissOverlays(page);
+
   const publish =
     (await firstVisible(page, SELECTORS.publishButton)) ??
     page.getByRole('button', { name: /^publish$/i }).first();
-  await publish.click();
+  await publish.click({ force: true });
   await page.waitForTimeout(800);
+
+  if (metadata) {
+    await fillPublishDialog(page, metadata);
+    await page.waitForTimeout(400);
+  }
+
   const confirm =
     (await firstVisible(page, SELECTORS.publishConfirm)) ??
     page.getByRole('button', { name: /publish now|publish and send/i }).first();
   if ((await confirm.count()) > 0 && (await confirm.isVisible())) {
     await confirm.click();
   }
+
+  await page
+    .waitForURL(/medium\.com\/(p\/[a-f0-9-]+|@[^/]+\/[a-f0-9-]+)/i, { timeout: 60_000 })
+    .catch(() => undefined);
   await page.waitForLoadState('domcontentloaded', { timeout: 60_000 }).catch(() => undefined);
 }
 

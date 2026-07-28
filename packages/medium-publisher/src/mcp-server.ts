@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * medium-publisher MCP server
+ * medium-publisher MCP server (v0.2.1)
  *
  * Exposes the medium-publisher CLI as an MCP tool server so Cursor, Claude
  * Code, Codex, and any other MCP-compatible client can publish to Medium
@@ -8,18 +8,16 @@
  *
  * Transport: stdio (default for local tools)
  *
- * Tools exposed:
- *   - medium_session_check   Check whether the saved session is still valid
- *   - medium_import          Cross-post from a public URL (dev.to, TabNews, …)
- *   - medium_publish         Publish raw markdown as a new story
- *   - medium_extract         Extract structured outline from a draft URL
- *   - medium_fix_draft       Apply formatting fixes in the Medium editor
- *   - medium_open_draft      Open a draft in headed browser for inspection
- *   - medium_publish_from_devto  Publish a DEV.to article on Medium (full pipeline)
+ * Primary tool: medium_publish_from_devto — DEV.to → Medium with title,
+ * SEO subtitle (~140 chars), tags (up to 5), hero image wait, auto-fix, publish.
  *
  * No API key needed — authentication is handled once via `medium-publisher login`
  * which saves a Playwright storageState (cookies) to disk.
  */
+
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { checkSession } from './lib/medium/session.js';
 import { importStory } from './lib/medium/import-story.js';
@@ -28,6 +26,10 @@ import { extractStory } from './lib/medium/extract-story.js';
 import { fixDraft, type FixAction } from './lib/medium/fix-draft.js';
 import { openDraftStory } from './lib/medium/open-draft.js';
 import { publishFromDevto } from './lib/medium/publish-from-devto.js';
+
+const SERVER_VERSION = JSON.parse(
+  readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'package.json'), 'utf8'),
+).version as string;
 
 // ---------------------------------------------------------------------------
 // Minimal MCP stdio server (no extra deps — raw JSON-RPC over stdout/stdin)
@@ -69,9 +71,11 @@ const TOOLS = [
     description:
       'Publish a DEV.to article on Medium. Use when the user wants to post, publish, share, ' +
       'republish, or mirror a dev.to blog post on Medium (dev.to to medium, cross-post). ' +
-      'Takes a public dev.to URL, imports the story, auto-fixes formatting (code blocks, headings), ' +
-      'runs basic security checks, publishes live, and returns the Medium article URL. ' +
-      'Requires one-time medium-publisher login. The dev.to article must already be published.',
+      'Pipeline: fetch DEV.to API (title, description, tags, cover/social image) → import at ' +
+      'medium.com/p/import → open editor (skip "See your story" when already on /edit) → set title, ' +
+      'auto-fix formatting, security check → publish dialog with SEO subtitle (~140 chars) and up to ' +
+      '5 topics via Medium autocomplete. Returns JSON: medium_url + details (tags, subtitle, ' +
+      'title_set, hero_image). Requires medium-publisher login. DEV.to article must be published.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -136,7 +140,8 @@ const TOOLS = [
   {
     name: 'medium_publish',
     description:
-      'Publish a raw markdown string as a new Medium story. ' +
+      'Publish a raw markdown string as a new Medium story. When status=published, fills the ' +
+      'publish dialog with optional subtitle (~140 char SEO preview) and up to 5 tags. ' +
       'Use status="draft" for testing — the story will be saved but NOT published.',
     inputSchema: {
       type: 'object',
@@ -157,7 +162,12 @@ const TOOLS = [
         tags: {
           type: 'array',
           items: { type: 'string' },
-          description: 'Up to 5 tags (optional)',
+          description: 'Up to 5 Medium topics for the publish dialog (optional)',
+        },
+        subtitle: {
+          type: 'string',
+          description:
+            'SEO preview subtitle (~140 chars) for Google/Medium search. Truncated automatically.',
         },
         canonical_url: {
           type: 'string',
@@ -228,7 +238,7 @@ async function handleRequest(req: JsonRpcRequest): Promise<void> {
   if (method === 'initialize') {
     ok(id, {
       protocolVersion: '2024-11-05',
-      serverInfo: { name: 'medium-publisher', version: '0.1.0' },
+      serverInfo: { name: 'medium-publisher', version: SERVER_VERSION },
       capabilities: { tools: {} },
     });
     return;
@@ -267,12 +277,26 @@ async function handleRequest(req: JsonRpcRequest): Promise<void> {
         });
         if (result.ok && result.medium_url) {
           ok(id, {
-            content: [{ type: 'text', text: result.medium_url }],
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  { ok: true, medium_url: result.medium_url, details: result.details },
+                  null,
+                  2,
+                ),
+              },
+            ],
             isError: false,
           });
         } else {
           ok(id, {
-            content: [{ type: 'text', text: result.error ?? 'Cross-post failed' }],
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({ ok: false, error: result.error ?? 'Publish failed' }, null, 2),
+              },
+            ],
             isError: true,
           });
         }
@@ -320,6 +344,7 @@ async function handleRequest(req: JsonRpcRequest): Promise<void> {
           title,
           body,
           tags: args.tags as string[] | undefined,
+          subtitle: args.subtitle as string | undefined,
           canonical: args.canonical_url as string | undefined,
           publish,
           dryRun: (args.dry_run as boolean | undefined) ?? false,
@@ -414,4 +439,4 @@ process.stdin.on('data', async (chunk: string) => {
 });
 
 process.stdin.on('end', () => process.exit(0));
-process.stderr.write('[medium-publisher MCP] ready\n');
+process.stderr.write(`[medium-publisher MCP] ready v${SERVER_VERSION}\n`);

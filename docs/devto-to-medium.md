@@ -135,6 +135,19 @@ After import, the tool:
 2. Waits for Medium **Saved** indicator (or reload fallback, ~30s timeout).
 3. Extracts content **before** closing the browser.
 
+## Metadata from DEV.to
+
+During `publish-devto` / `medium_publish_from_devto`, the pipeline reads extra fields from the DEV.to API and applies them on Medium:
+
+| DEV.to field | Medium destination |
+|---|---|
+| `title` | Story title (editor) + publish preview title |
+| `description` | SEO subtitle (~140 chars) in the publish dialog |
+| `tag_list` | Up to 5 topics in the publish dialog |
+| `cover_image` / `social_image` | Hero image — waited for after import (Medium may fetch OG async) |
+
+The JSON result includes `details.subtitle`, `details.tags`, `details.title_set`, and `details.hero_image` when useful for verification.
+
 “Saved as draft” is returned only after autosave is confirmed — not immediately after clicking Import.
 
 ## CLI commands

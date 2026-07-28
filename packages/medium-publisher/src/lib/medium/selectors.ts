@@ -35,6 +35,9 @@ export const SELECTORS = {
     'button:has-text("Publish now")',
     'button:has-text("Publish and send")',
   ],
+  publishPreviewTitle: ['textarea[aria-label="Story preview title"]'],
+  publishPreviewSubtitle: ['textarea[aria-label="Story preview subtitle"]'],
+  publishTopicInput: ['input[placeholder*="topic" i]'],
   titleInput: [
     'h1[data-default-text="Title"]',
     '[data-testid="storyTitle"]',

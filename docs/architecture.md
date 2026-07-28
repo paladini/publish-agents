@@ -48,6 +48,7 @@ See [devto-to-medium.md](./devto-to-medium.md) for import URL, contenteditable f
 
 | Version | Medium publisher |
 |---|---|
+| **v0.2.1** | DEV.to metadata (title, subtitle, tags), import navigation fix, MCP JSON response |
 | **v0.2.0** | DEV.to one-shot publish, extract/fix, autosave, skills |
 | v0.1.0 | Initial CLI + MCP import/publish |
 
