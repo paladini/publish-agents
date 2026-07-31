@@ -2,9 +2,16 @@
 
 Reusable **publication agents** for AI-assisted cross-posting — browser automation, CLI tools, MCP servers, and Cursor skills.
 
-**Distributed via this GitHub repository only** (not npm). Current release: **v0.2.1**.
+**Published on npm** as `@paladini/*-publisher-mcp`. Current release: **v0.2.1** (+ linkedin-publisher **0.1.0**).
 
 ## Quick start
+
+```powershell
+npm install -g @paladini/medium-publisher-mcp
+medium-publisher login
+```
+
+Or from source:
 
 ```powershell
 git clone git@github.com:paladini/publish-agents.git
@@ -37,7 +44,8 @@ See [docs/devto-to-medium.md](./docs/devto-to-medium.md) and [docs/medium-publis
 | Package | Version | Description |
 |---|---|---|
 | [medium-publisher](./packages/medium-publisher) | **0.2.1** | Medium via Patchright — import, metadata, auto-fix, MCP |
-| [tabnews-publisher](./packages/tabnews-publisher) | 0.1.0 | TabNews via Patchright |
+| [tabnews-publisher](./packages/tabnews-publisher) | 0.1.0 | TabNews via Playwright |
+| [linkedin-publisher](./packages/linkedin-publisher) | 0.1.0 | LinkedIn Articles via Patchright — DEV.to cross-post, MCP |
 | Dev.to | external | `user-devto` MCP |
 
 ## Cursor skills

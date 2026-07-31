@@ -4,8 +4,8 @@
   "description": "Publish to TabNews via Playwright — persistent browser session, CLI & MCP server.",
   "type": "module",
   "bin": {
-    "tabnews-publisher-mcp": "./dist/mcp-server.js",
-    "tabnews-publisher": "./dist/cli.js"
+    "tabnews-publisher-mcp": "dist/mcp-server.js",
+    "tabnews-publisher": "dist/cli.js"
   },
   "exports": {
     ".": "./dist/index.js"
@@ -20,6 +20,7 @@
     "start": "node dist/cli.js",
     "dev": "tsx src/cli.ts",
     "test": "vitest run",
+    "prepublishOnly": "npm run build",
     "postinstall": "playwright install chromium || true"
   },
   "dependencies": {
@@ -35,5 +36,20 @@
   "engines": {
     "node": ">=20"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/paladini/publish-agents.git",
+    "directory": "packages/tabnews-publisher"
+  },
+  "bugs": {
+    "url": "https://github.com/paladini/publish-agents/issues"
+  },
+  "homepage": "https://github.com/paladini/publish-agents/tree/main/packages/tabnews-publisher#readme",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "keywords": ["tabnews", "mcp", "playwright", "browser-automation", "publisher"],
+  "author": "Fernando Paladini"
 }

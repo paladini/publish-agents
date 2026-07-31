@@ -1,11 +1,11 @@
 {
-  "name": "@paladini/medium-publisher-mcp",
-  "version": "0.2.1",
-  "description": "Publish to Medium via browser automation — DEV.to import, auto-fix formatting, MCP tools, persistent session.",
+  "name": "@paladini/linkedin-publisher-mcp",
+  "version": "0.1.0",
+  "description": "Publish LinkedIn Articles from DEV.to via browser automation — Markdown formatting, draft-first, MCP tools.",
   "type": "module",
   "bin": {
-    "medium-publisher-mcp": "dist/mcp-server.js",
-    "medium-publisher": "dist/cli.js"
+    "linkedin-publisher-mcp": "dist/mcp-server.js",
+    "linkedin-publisher": "dist/cli.js"
   },
   "exports": {
     ".": "./dist/index.js"
@@ -40,16 +40,16 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/paladini/publish-agents.git",
-    "directory": "packages/medium-publisher"
+    "directory": "packages/linkedin-publisher"
   },
   "bugs": {
     "url": "https://github.com/paladini/publish-agents/issues"
   },
-  "homepage": "https://github.com/paladini/publish-agents/tree/main/packages/medium-publisher#readme",
+  "homepage": "https://github.com/paladini/publish-agents/tree/main/packages/linkedin-publisher#readme",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org"
   },
-  "keywords": ["medium", "devto", "cross-post", "mcp", "patchright", "browser-automation", "publisher"],
+  "keywords": ["linkedin", "devto", "cross-post", "mcp", "patchright", "browser-automation", "publisher", "articles"],
   "author": "Fernando Paladini"
 }

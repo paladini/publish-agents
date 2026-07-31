@@ -7,52 +7,68 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-publish:
+  build:
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: write
-      packages: write
-      id-token: write
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm run build
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+  publish-npm:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           registry-url: 'https://registry.npmjs.org'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build packages
-        run: npm run build
-
+      - run: npm ci
+      - run: npm run build
       - name: Publish to NPM Registry
+        continue-on-error: true
         run: |
           npm publish --workspace=@paladini/medium-publisher-mcp --access public
           npm publish --workspace=@paladini/tabnews-publisher-mcp --access public
+          npm publish --workspace=@paladini/linkedin-publisher-mcp --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Setup Node.js for GitHub Packages
-        uses: actions/setup-node@v4
+  publish-github-packages:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           registry-url: 'https://npm.pkg.github.com'
           scope: '@paladini'
-
+      - run: npm ci
+      - run: npm run build
       - name: Publish to GitHub Packages
         run: |
           npm publish --workspace=@paladini/medium-publisher-mcp
           npm publish --workspace=@paladini/tabnews-publisher-mcp
+          npm publish --workspace=@paladini/linkedin-publisher-mcp
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  release:
+    needs: [publish-github-packages]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
       - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           body_path: CHANGELOG.md

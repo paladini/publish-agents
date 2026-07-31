@@ -8,10 +8,12 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build -w @paladini/medium-publisher-mcp && npm run build -w @paladini/tabnews-publisher-mcp",
-    "typecheck": "npm run typecheck -w @paladini/medium-publisher-mcp && npm run typecheck -w @paladini/tabnews-publisher-mcp",
+    "build": "npm run build -w @paladini/medium-publisher-mcp && npm run build -w @paladini/tabnews-publisher-mcp && npm run build -w @paladini/linkedin-publisher-mcp",
+    "typecheck": "npm run typecheck -w @paladini/medium-publisher-mcp && npm run typecheck -w @paladini/tabnews-publisher-mcp && npm run typecheck -w @paladini/linkedin-publisher-mcp",
+    "publish:npm": "npm run build && npm publish --workspace=@paladini/medium-publisher-mcp --access public && npm publish --workspace=@paladini/tabnews-publisher-mcp --access public && npm publish --workspace=@paladini/linkedin-publisher-mcp --access public",
     "medium": "npm run start -w @paladini/medium-publisher-mcp --",
-    "tabnews": "npm run start -w @paladini/tabnews-publisher-mcp --"
+    "tabnews": "npm run start -w @paladini/tabnews-publisher-mcp --",
+    "linkedin": "npm run start -w @paladini/linkedin-publisher-mcp --"
   },
   "engines": {
     "node": ">=20"
