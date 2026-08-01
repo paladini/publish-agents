@@ -6,7 +6,6 @@ import { extractStoryFromPage, type StoryExtract } from './extract-story.js';
 export function buildFixActionsFromExtract(extract: StoryExtract): FixAction[] {
   const actions: FixAction[] = [
     { type: 'removeEmptyCodeBlocks' },
-    { type: 'mergeAdjacentCodeBlocks' },
   ];
 
   const seen = new Set<number>();
@@ -60,13 +59,33 @@ export async function runAutoFixLoop(
 ): Promise<{ applied: string[]; extract: StoryExtract }> {
   const applied: string[] = [];
   let extract = await extractStoryFromPage(page);
+  let previousFingerprint = '';
 
   for (let i = 0; i < maxIterations; i++) {
     if (!hasCriticalFlags(extract)) break;
 
+    const fingerprint = extract.blocks
+      .map((block) => `${block.type}:${block.text}`)
+      .join('|');
+    if (fingerprint === previousFingerprint) break;
+    previousFingerprint = fingerprint;
+
     const actions = buildFixActionsFromExtract(extract);
-    applied.push(...(await applyFixesOnPage(page, actions)));
-    extract = await extractStoryFromPage(page);
+    const structural = actions.filter(
+      (action) => action.type === 'removeEmptyCodeBlocks' || action.type === 'mergeAdjacentCodeBlocks',
+    );
+    if (structural.length > 0) {
+      applied.push(...(await applyFixesOnPage(page, structural)));
+      extract = await extractStoryFromPage(page);
+    }
+
+    const indexed = buildFixActionsFromExtract(extract).filter(
+      (action) => action.type !== 'removeEmptyCodeBlocks' && action.type !== 'mergeAdjacentCodeBlocks',
+    );
+    if (indexed.length > 0) {
+      applied.push(...(await applyFixesOnPage(page, indexed)));
+      extract = await extractStoryFromPage(page);
+    }
   }
 
   return { applied, extract };

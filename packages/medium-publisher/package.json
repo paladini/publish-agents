@@ -1,6 +1,6 @@
 {
   "name": "@paladini/medium-publisher-mcp",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Publish to Medium via browser automation — DEV.to import, auto-fix formatting, MCP tools, persistent session.",
   "type": "module",
   "bin": {

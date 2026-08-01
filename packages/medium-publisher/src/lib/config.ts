@@ -37,7 +37,7 @@ const DEFAULTS: Required<MediumPublisherConfig> = {
   username: '',
   importTimeoutMs: 120_000,
   saveTimeoutMs: 30_000,
-  browserMode: 'bundled',
+  browserMode: 'system-profile',
   browserChannel: 'chrome',
   userDataDir: '',
   cdpUrl: 'http://127.0.0.1:9222',

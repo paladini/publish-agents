@@ -10,27 +10,59 @@ export function isStoryEditorUrl(url: string): boolean {
   return STORY_URL_PATTERN.test(url) || /\/edit(?:\/|$|\?)/i.test(url);
 }
 
+export function storyContentScore(childCount: number, grafCount: number, textLength: number): number {
+  return grafCount * 100 + childCount * 10 + (textLength > 0 ? 1 : 0);
+}
+
+export function hasMinimumStoryBlocks(blockCount: number, minimumBlocks: number): boolean {
+  return blockCount >= minimumBlocks;
+}
+
 export async function openDraft(page: Page, url: string): Promise<void> {
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60_000 });
   await waitForStoryEditor(page);
 }
 
-export async function waitForStoryEditor(page: Page, timeoutMs = 60_000): Promise<void> {
+export async function waitForStoryEditor(
+  page: Page,
+  timeoutMs = 60_000,
+  minimumBlocks = 1,
+): Promise<void> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     const editor = await firstVisible(page, SELECTORS.editor);
-    if (editor && isStoryEditorUrl(page.url())) return;
-    if (editor && (await hasStoryContent(page))) return;
+    if (editor && isStoryEditorUrl(page.url()) && (await hasStoryContent(page, minimumBlocks))) return;
+    if (editor && (await hasStoryContent(page, minimumBlocks))) return;
     await page.waitForTimeout(500);
   }
   throw new TimeoutError(`Story editor did not load within ${timeoutMs}ms (url: ${page.url()})`);
 }
 
 export async function storyContentRoot(page: Page): Promise<Locator> {
-  const root =
-    (await firstVisible(page, ['.postArticle-content', '[data-testid="storyEditor"]'])) ??
-    page.locator('[contenteditable="true"]').last();
-  return root;
+  const candidates: Locator[] = [];
+  for (const selector of SELECTORS.storyBody) {
+    const locator = page.locator(selector);
+    const count = await locator.count();
+    for (let index = 0; index < count; index++) {
+      candidates.push(locator.nth(index));
+    }
+  }
+
+  let best: { locator: Locator; score: number } | undefined;
+  for (const candidate of candidates) {
+    if (!(await candidate.isVisible().catch(() => false))) continue;
+
+    const directChildren = candidate.locator(':scope > *');
+    const childCount = await directChildren.count();
+    const grafCount = await candidate.locator(':scope > [class*="graf-"]').count();
+    const textLength = (await candidate.innerText().catch(() => '')).trim().length;
+    const score = storyContentScore(childCount, grafCount, textLength);
+
+    if (!best || score > best.score) best = { locator: candidate, score };
+  }
+
+  if (best) return best.locator;
+  return page.locator('[contenteditable="true"]').last();
 }
 
 export async function storyBlockLocators(page: Page): Promise<Locator[]> {
@@ -43,20 +75,21 @@ export async function storyBlockLocators(page: Page): Promise<Locator[]> {
 export async function getStoryTitle(page: Page): Promise<string> {
   const titleEl =
     (await firstVisible(page, SELECTORS.titleInput)) ??
-    page.locator('h1[contenteditable="true"], h3.graf--title').first();
+    page.locator(
+      '[data-testid="editorTitleParagraph"], h1[contenteditable="true"], h3.graf--title, [class*="graf--title"]',
+    ).first();
   if ((await titleEl.count()) === 0) return '';
   return (await titleEl.innerText()).trim();
 }
 
-export async function hasStoryContent(page: Page): Promise<boolean> {
+export async function hasStoryContent(page: Page, minimumBlocks = 1): Promise<boolean> {
+  const root = await storyContentRoot(page);
+  const blocks = root.locator(':scope > *');
+  if (!hasMinimumStoryBlocks(await blocks.count(), minimumBlocks)) return false;
+
   const title = await getStoryTitle(page);
   if (title && title.toLowerCase() !== 'title') return true;
-  const blocks = await storyBlockLocators(page);
-  for (const block of blocks) {
-    const text = (await block.innerText()).trim();
-    if (text) return true;
-  }
-  return false;
+  return (await root.innerText().catch(() => '')).trim().length > 0;
 }
 
 export async function blurEditor(page: Page): Promise<void> {
@@ -109,8 +142,14 @@ export async function waitForDraftSaved(page: Page, timeoutMs = 30_000): Promise
 
 export async function selectBlock(page: Page, block: Locator): Promise<void> {
   await block.scrollIntoViewIfNeeded();
-  await block.click();
-  await page.keyboard.press(`${process.platform === 'darwin' ? 'Meta' : 'Control'}+KeyA`);
+  await block.click({ force: true });
+  await block.evaluate((element) => {
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+  });
 }
 
 export async function deleteBlock(page: Page, block: Locator): Promise<void> {
@@ -122,6 +161,6 @@ export async function deleteBlock(page: Page, block: Locator): Promise<void> {
 export async function replaceBlockText(page: Page, block: Locator, text: string): Promise<void> {
   await selectBlock(page, block);
   await page.keyboard.press('Backspace');
-  if (text) await page.keyboard.type(text);
+  if (text) await page.keyboard.insertText(text);
   await page.waitForTimeout(300);
 }

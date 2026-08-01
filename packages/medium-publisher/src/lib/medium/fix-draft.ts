@@ -1,4 +1,4 @@
-import type { Page } from 'patchright';
+import type { Locator, Page } from 'patchright';
 import { loadConfig } from '../config.js';
 import { assertLoggedIn, withBrowser } from '../browser.js';
 import { extractStoryFromPage, type StoryExtract } from './extract-story.js';
@@ -45,15 +45,23 @@ async function blockTypeAt(page: Page, index: number): Promise<string> {
   });
 }
 
+async function codeBlockText(block: Locator): Promise<string> {
+  return ((await block.locator('.pre--content').first().textContent().catch(() => '')) ?? '').replace(
+    /\u00a0/g,
+    ' ',
+  );
+}
+
 async function removeEmptyCodeBlocks(page: Page): Promise<number> {
   let removed = 0;
   for (let pass = 0; pass < 20; pass++) {
     const blocks = await storyBlockLocators(page);
+    const beforeCount = blocks.length;
     let found = false;
     for (let i = blocks.length - 1; i >= 0; i--) {
       const block = blocks[i]!;
       const kind = await blockTypeAt(page, i);
-      const text = (await block.innerText()).trim();
+      const text = (await codeBlockText(block)).trim();
       if (kind === 'code' && !text) {
         await deleteBlock(page, block);
         removed++;
@@ -62,6 +70,8 @@ async function removeEmptyCodeBlocks(page: Page): Promise<number> {
       }
     }
     if (!found) break;
+    const afterCount = (await storyBlockLocators(page)).length;
+    if (afterCount >= beforeCount) break;
   }
   return removed;
 }
@@ -77,10 +87,13 @@ async function mergeAdjacentCodeBlocks(page: Page): Promise<number> {
       const typeA = await blockTypeAt(page, i);
       const typeB = await blockTypeAt(page, i + 1);
       if (typeA !== 'code' || typeB !== 'code') continue;
-      const textA = (await a.innerText()).trimEnd();
-      const textB = (await b.innerText()).trim();
+      const textA = (await codeBlockText(a)).trimEnd();
+      const textB = (await codeBlockText(b)).trim();
+      const beforeCount = blocks.length;
       await replaceBlockText(page, a, `${textA}\n${textB}`);
       await deleteBlock(page, b);
+      const afterCount = (await storyBlockLocators(page)).length;
+      if (afterCount >= beforeCount) return merged;
       merged++;
       found = true;
       break;
@@ -103,15 +116,15 @@ async function promoteDemoteHeading(
   await page.waitForTimeout(200);
 
   const formatBtn = page.getByRole('button', { name: /text format|format/i }).first();
-  if ((await formatBtn.count()) > 0) {
-    await formatBtn.click().catch(() => undefined);
+  if ((await formatBtn.count()) > 0 && (await formatBtn.isVisible().catch(() => false))) {
+    await formatBtn.click({ force: true }).catch(() => undefined);
   }
 
   const label =
     level === 2 ? /heading 2|h2/i : level === 3 ? /heading 3|h3/i : /paragraph|normal text/i;
   const option = page.getByRole('button', { name: label }).first();
-  if ((await option.count()) > 0) {
-    await option.click();
+  if ((await option.count()) > 0 && (await option.isVisible().catch(() => false))) {
+    await option.click({ force: true });
     return;
   }
 

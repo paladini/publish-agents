@@ -91,14 +91,14 @@ function detectFlags(blocks: StoryBlock[]): StoryExtractFlag[] {
         message: `Empty paragraph at index ${block.index}`,
       });
     }
-    if (/^#{1,6}\s+\S/.test(block.text)) {
+    if (block.type !== 'code' && /^#{1,6}\s+\S/.test(block.text)) {
       flags.push({
         code: 'raw_markdown_heading',
         blockIndex: block.index,
         message: `Raw markdown heading at index ${block.index}: ${block.text.slice(0, 60)}`,
       });
     }
-    if (/^```/.test(block.text.trim()) || block.text.trim() === '```') {
+    if (block.type !== 'code' && (/^```/.test(block.text.trim()) || block.text.trim() === '```')) {
       flags.push({
         code: 'raw_markdown_fence',
         blockIndex: block.index,
@@ -131,7 +131,9 @@ export async function extractStoryFromPage(page: Page): Promise<StoryExtract> {
     const meta = await block.evaluate((el) => ({
       className: el.className ?? '',
       tagName: el.tagName.toLowerCase(),
-      text: (el.textContent ?? '').replace(/\u00a0/g, ' ').trim(),
+      text: ((el.tagName.toLowerCase() === 'pre'
+        ? el.querySelector('.pre--content')?.textContent
+        : el.textContent) ?? '').replace(/\u00a0/g, ' ').trim(),
       lang: el.querySelector('code')?.getAttribute('data-lang') ?? undefined,
     }));
     blocks.push({

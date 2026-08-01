@@ -1,9 +1,11 @@
 import { loadConfig } from '../config.js';
 import { assertLoggedIn, withBrowser } from '../browser.js';
-import { waitForDraftSaved } from './editor-utils.js';
+import { waitForDraftSaved, waitForStoryEditor } from './editor-utils.js';
 import { extractStoryFromPage } from './extract-story.js';
 import { fetchDevtoArticle, heroImageUrl } from './devto-api.js';
 import { runAutoFixLoop, hasCriticalFlags } from './auto-fix.js';
+import { applyFixesOnPage } from './fix-draft.js';
+import { parseSourceBlocks, reviewSourceAgainstExtract } from './source-review.js';
 import { securityCheck } from './security-check.js';
 import { clickPublish, runImportOnPage } from './import-flow.js';
 import {
@@ -30,6 +32,10 @@ export type PublishFromDevtoResult = {
     hero_image?: boolean;
     tags?: string[];
     subtitle?: string;
+    formattingReview?: {
+      issuesFound: number;
+      fixesApplied: string[];
+    };
   };
 };
 
@@ -69,6 +75,8 @@ export async function publishFromDevto(
         await assertLoggedIn(page, config.username || undefined);
 
         await runImportOnPage(page, options.devtoUrl, config.importTimeoutMs, options.devtoUrl);
+        const expectedBlocks = Math.min(3, parseSourceBlocks(sourceMarkdown).length);
+        await waitForStoryEditor(page, config.importTimeoutMs, expectedBlocks);
         await waitForDraftSaved(page, config.saveTimeoutMs);
 
         const titleSet = article.title ? await ensureStoryTitle(page, article.title) : false;
@@ -76,10 +84,18 @@ export async function publishFromDevto(
         const heroImage = expectedHero ? await waitForHeroImage(page) : true;
         if (titleSet) await waitForDraftSaved(page, config.saveTimeoutMs);
 
-        const publishMetadata = buildPublishMetadata(article);
+        const publishMetadata = buildPublishMetadata({ ...article, body_markdown: sourceMarkdown });
 
-        const { applied, extract } = await runAutoFixLoop(page);
+        let { applied, extract } = await runAutoFixLoop(page);
         await waitForDraftSaved(page, config.saveTimeoutMs);
+
+        let sourceReview = reviewSourceAgainstExtract(sourceMarkdown, extract);
+        for (let iteration = 0; iteration < 3 && sourceReview.critical; iteration++) {
+          if (!sourceReview.actions.length) break;
+          applied.push(...(await applyFixesOnPage(page, sourceReview.actions)));
+          extract = await extractStoryFromPage(page);
+          sourceReview = reviewSourceAgainstExtract(sourceMarkdown, extract);
+        }
 
         const security = securityCheck(sourceMarkdown, extract);
         if (!security.ok) {
@@ -90,6 +106,13 @@ export async function publishFromDevto(
           throw new Error(
             `Formatting issues remain after auto-fix (${extract.flags.length} flags). ` +
               `Open draft manually or use medium_fix_draft. Flags: ${extract.flags.map((f) => f.code).join(', ')}`,
+          );
+        }
+
+        if (sourceReview.critical) {
+          throw new Error(
+            `Source formatting review failed (${sourceReview.issues.length} issues). ` +
+              `${sourceReview.issues.join('; ')}`,
           );
         }
 
@@ -105,6 +128,10 @@ export async function publishFromDevto(
           hero_image: heroImage,
           tags: publishMetadata.tags,
           subtitle: publishMetadata.subtitle,
+          formattingReview: {
+            issuesFound: sourceReview.issues.length,
+            fixesApplied: applied,
+          },
         };
 
         return {

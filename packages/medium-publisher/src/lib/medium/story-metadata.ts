@@ -38,14 +38,30 @@ export function parseDevtoTags(tagList: string | string[] | undefined): string[]
 export async function fillStoryTitle(page: Page, title: string): Promise<void> {
   const titleEl =
     (await firstVisible(page, SELECTORS.titleInput)) ??
-    page.locator('h3.graf--title, h1[contenteditable="true"]').first();
+    page.locator(
+      '[data-testid="editorTitleParagraph"], h1[contenteditable="true"], h3.graf--title, [class*="graf--title"]',
+    ).first();
   if ((await titleEl.count()) === 0) {
-    await page.keyboard.type(title);
+    await page.keyboard.insertText(title);
     return;
   }
   await titleEl.click();
-  await page.keyboard.press(`${process.platform === 'darwin' ? 'Meta' : 'Control'}+KeyA`);
-  await page.keyboard.type(title);
+  const editable = await titleEl.evaluate((element) => {
+    const tag = element.tagName.toLowerCase();
+    return tag === 'input' || tag === 'textarea' || element.getAttribute('contenteditable') === 'true';
+  });
+  if (editable) {
+    await titleEl.fill(title);
+  } else {
+    await titleEl.evaluate((element) => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    });
+    await page.keyboard.type(title);
+  }
   await page.waitForTimeout(400);
 }
 
@@ -54,6 +70,10 @@ export async function ensureStoryTitle(page: Page, title: string): Promise<boole
   const current = (await getStoryTitle(page)).trim();
   if (current && current.toLowerCase() !== 'title') return false;
   await fillStoryTitle(page, title);
+  const savedTitle = (await getStoryTitle(page)).trim();
+  if (savedTitle !== title) {
+    throw new Error(`Medium title was not set correctly (expected "${title}", got "${savedTitle}")`);
+  }
   return true;
 }
 
@@ -140,10 +160,20 @@ export function buildPublishMetadata(article: {
   title: string;
   description: string;
   tags: string[];
+  body_markdown?: string;
 }): PublishMetadata {
+  const description = truncateSeoDescription(article.description);
+  const firstBodyParagraph = article.body_markdown
+    ?.split(/\r?\n\s*\r?\n/)
+    .map((part) => part.replace(/^\s*#{1,6}\s+/, '').replace(/[`*_]/g, '').trim())
+    .find(Boolean);
+  const subtitle = description || truncateSeoDescription(
+    firstBodyParagraph || `Discover ${article.title} with practical examples and implementation guidance.`,
+  );
+
   return {
     previewTitle: article.title,
-    subtitle: truncateSeoDescription(article.description),
+    subtitle,
     tags: article.tags.slice(0, 5),
   };
 }
